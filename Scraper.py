@@ -1,6 +1,3 @@
-urls = ['https://www.salmonarmtoyota.com', 'https://www.peacecountrytoyota.ca']
-subquery = ['/new/keywords/rav4','/used/keywords/rav4']
-
 import requests
 import re
 from bs4 import BeautifulSoup
@@ -13,15 +10,18 @@ from selenium.webdriver.chrome.options import Options
 import time
 
 cars = []
+headers = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0"}
 
+#Scraper for salmonarm and peacecountry
 def toyotaScrape1(url, dealer):
-    headers = {'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0"}
+
     request = requests.get(url = url, headers=headers)
 
     soup = BeautifulSoup(request.content, 'html.parser')
     lookupClass = 'vehicle-list-cell listing-page-row-padding-0'
 
 
+#Iterating through dealship inventory
     table = soup.find('div', attrs = {'id': 'vehicleList'})
     for row in table.find_all('div', attrs = {'class': lookupClass}):
         price = row.find_all('span', attrs = {'itemprop': 'price'})
@@ -36,13 +36,8 @@ def toyotaScrape1(url, dealer):
             tempCar[key] = re.sub(r"<.*?>", "", str(value))
         cars.append(tempCar)
 
-for url in urls:
-    for query in subquery:
-        toyotaScrape1(url + query, url)
-
+#scraper for sargent and terrace
 def toyotaScrape2(url, dealer):
-    headers = {
-        'User-Agent': "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/134.0.0.0 Safari/537.36 Edg/134.0.0.0"}
     request = requests.get(url=url, headers=headers)
 
     soup = BeautifulSoup(request.content, 'html.parser')
@@ -63,6 +58,7 @@ def toyotaScrape2(url, dealer):
             tempCar[key] = re.sub(r"<.*?>", "", str(value))
         cars.append(tempCar)
 
+#Scraper for quesnel
 def toyotaScrape3(url, dealer):
     soup = BeautifulSoup(loadJS(url), 'html.parser')
     table = soup.find('div', attrs={'class': 'resultCard'})
@@ -88,26 +84,28 @@ def toyotaScrape3(url, dealer):
             tempCar[key] = re.sub(r"<.*?>", "", str(value))
         cars.append(tempCar)
 
-
+#Helper function used in toyotaScrape3 to load dynamic pages
 def loadJS(url):
     options = Options()
-    options.add_argument('--headless')  # Run in headless mode (no GUI)
+    options.add_argument('--headless')
     options.add_argument('--disable-gpu')
     options.add_argument('--no-sandbox')
-
-    # Path to your ChromeDriver
     service = Service()
 
-    # Start driver
     driver = webdriver.Chrome(service=service, options=options)
 
-    # Load the page
     driver.get(url)
 
-    # Optional: wait for JavaScript to load (simple way)
-    time.sleep(3)  # Wait 3 seconds (better to use WebDriverWait — see below)
+    #Waiting for javascript to load
+    time.sleep(3)
     return driver.page_source
 
+#Toyota scrape 1
+urls = ['https://www.salmonarmtoyota.com', 'https://www.peacecountrytoyota.ca']
+subquery = ['/new/keywords/rav4','/used/keywords/rav4']
+for url in urls:
+    for query in subquery:
+        toyotaScrape1(url + query, url)
 
 toyotaScrape2('https://www.sargenttoyota.ca/inventory.html?filterid=a1b13q0-10x0-0-0+W3sidHNlYXJjaCI6W3sibiI6ImZpZWxkc2VhcmNoIiwidiI6InJhdjQiLCJzIjoxfV19XQ==', 'https://www.sargenttoyota.ca')
 toyotaScrape2('https://www.terracetoyota.ca/inventory.html?filterid=a8q0-10x0-0-0+W3sidHNlYXJjaCI6W3sibiI6ImZpZWxkc2VhcmNoIiwidiI6InJhdjQiLCJzIjoxfV19XQ==', 'https://www.terracetoyota.ca')
